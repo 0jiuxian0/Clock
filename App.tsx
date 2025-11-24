@@ -27,6 +27,7 @@ const App = () => {
   const [time, setTime] = useState(new Date());
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [orientationMode, setOrientationMode] = useState<OrientationMode>('landscape');
+  const [showDateInfo, setShowDateInfo] = useState(true);
   const { width, height } = useWindowDimensions();
   const isPortraitLayout = height >= width;
 
@@ -72,6 +73,8 @@ const App = () => {
 
   const backgroundColor = isDarkMode ? '#000000' : '#FFFFFF';
   const textColor = isDarkMode ? '#FFFFFF' : '#000000';
+  const buttonBackground = isDarkMode ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.06)';
+  const buttonBorder = isDarkMode ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.2)';
 
   const toggleOrientationMode = () => {
     if (orientationMode === 'landscape') {
@@ -109,26 +112,43 @@ const App = () => {
     <TouchableWithoutFeedback onPress={toggleTheme}>
       <View style={[styles.container, { backgroundColor }]}>
         <StatusBar hidden={true} />
-        <TouchableOpacity
-          onPress={handleOrientationButtonPress}
-          style={[styles.orientationButton, { borderColor: textColor }]}
-          activeOpacity={0.7}>
-          <Text style={[styles.buttonText, { color: textColor }]}>
-            {orientationMode === 'landscape' ? '切换竖屏' : '切换横屏'}
-          </Text>
-        </TouchableOpacity>
-        {renderTime()}
-        <Text style={[styles.dateText, { color: textColor }]}>
-          {formatDate(time)}
-        </Text>
-        <View style={styles.hintWrapper}>
-          <Text style={[styles.hintText, { color: textColor }]}>
-            点击屏幕切换主题
-          </Text>
-          <Text style={[styles.hintText, { color: textColor }]}>
-            按按钮切换横竖屏，也可随手机旋转自动调整
-          </Text>
+        <View style={styles.toolbar}>
+          <TouchableOpacity
+            onPress={handleOrientationButtonPress}
+            style={[
+              styles.iconButton,
+              {
+                backgroundColor: buttonBackground,
+                borderColor: buttonBorder,
+              },
+            ]}
+            activeOpacity={0.7}>
+            <Text style={[styles.iconButtonText, { color: textColor }]}>⟳</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={event => {
+              event.stopPropagation();
+              setShowDateInfo(prev => !prev);
+            }}
+            style={[
+              styles.iconButton,
+              {
+                backgroundColor: buttonBackground,
+                borderColor: buttonBorder,
+              },
+            ]}
+            activeOpacity={0.7}>
+            <Text style={[styles.iconButtonText, { color: textColor }]}>
+              {showDateInfo ? '📅' : '🙈'}
+            </Text>
+          </TouchableOpacity>
         </View>
+        {renderTime()}
+        {showDateInfo ? (
+          <Text style={[styles.dateText, { color: textColor }]}>
+            {formatDate(time)}
+          </Text>
+        ) : null}
       </View>
     </TouchableWithoutFeedback>
   );
@@ -166,27 +186,31 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === 'android' ? 'sans-serif' : 'System',
     textAlign: 'center',
   },
-  hintText: {
-    fontSize: 16,
-    opacity: 0.5,
-    textAlign: 'center',
-  },
-  hintWrapper: {
-    marginTop: 32,
-    gap: 8,
-  },
-  orientationButton: {
+  toolbar: {
     position: 'absolute',
-    top: 40,
-    right: 24,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    bottom: 50,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 18,
+  },
+  iconButton: {
+    width: 60,
+    height: 60,
     borderWidth: 1,
     borderRadius: 999,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000000',
+    shadowOpacity: 0.2,
+    shadowOffset: { width: 0, height: 8 },
+    shadowRadius: 12,
+    elevation: 8,
   },
-  buttonText: {
-    fontSize: 14,
-    letterSpacing: 1,
+  iconButtonText: {
+    fontSize: 26,
   },
 });
 
