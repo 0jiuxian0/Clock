@@ -18,6 +18,10 @@ type OrientationNativeModule = {
   rotateToLandscape: () => void;
   rotateToPortrait: () => void;
   enableAuto: () => void;
+  lockOrientation: () => void;
+  unlockOrientation: () => void;
+  rotateToLandscapeLocked: () => void;
+  rotateToPortraitLocked: () => void;
 };
 
 const OrientationModule = NativeModules
@@ -27,9 +31,15 @@ const App = () => {
   const [time, setTime] = useState(new Date());
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [orientationMode, setOrientationMode] = useState<OrientationMode>('landscape');
-  const [showDateInfo, setShowDateInfo] = useState(true);
+  const [showDateInfo, setShowDateInfo] = useState(false);
+  const [isOrientationLocked, setIsOrientationLocked] = useState(false);
   const { width, height } = useWindowDimensions();
   const isPortraitLayout = height >= width;
+
+  // 根据实际屏幕方向更新 orientationMode 状态
+  useEffect(() => {
+    setOrientationMode(isPortraitLayout ? 'portrait' : 'landscape');
+  }, [isPortraitLayout]);
 
   useEffect(() => {
     // 设置全屏和沉浸式模式
@@ -76,13 +86,35 @@ const App = () => {
   const buttonBackground = isDarkMode ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.06)';
   const buttonBorder = isDarkMode ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.2)';
 
-  const toggleOrientationMode = () => {
-    if (orientationMode === 'landscape') {
-      OrientationModule?.rotateToPortrait?.();
-      setOrientationMode('portrait');
+  const toggleLockOrientation = () => {
+    if (isOrientationLocked) {
+      OrientationModule?.unlockOrientation?.();
+      setIsOrientationLocked(false);
     } else {
-      OrientationModule?.rotateToLandscape?.();
-      setOrientationMode('landscape');
+      OrientationModule?.lockOrientation?.();
+      setIsOrientationLocked(true);
+    }
+  };
+
+  const toggleOrientationMode = () => {
+    if (isOrientationLocked) {
+      // 锁定状态下，直接切换并保持锁定
+      if (orientationMode === 'landscape') {
+        OrientationModule?.rotateToPortraitLocked?.();
+        setOrientationMode('portrait');
+      } else {
+        OrientationModule?.rotateToLandscapeLocked?.();
+        setOrientationMode('landscape');
+      }
+    } else {
+      // 未锁定状态，切换后会自动恢复重力感应
+      if (orientationMode === 'landscape') {
+        OrientationModule?.rotateToPortrait?.();
+        setOrientationMode('portrait');
+      } else {
+        OrientationModule?.rotateToLandscape?.();
+        setOrientationMode('landscape');
+      }
     }
   };
   const handleOrientationButtonPress = (event: GestureResponderEvent) => {
@@ -112,18 +144,28 @@ const App = () => {
     <TouchableWithoutFeedback onPress={toggleTheme}>
       <View style={[styles.container, { backgroundColor }]}>
         <StatusBar hidden={true} />
+        <View style={styles.contentContainer}>
+          {renderTime()}
+          {showDateInfo ? (
+            <Text style={[styles.dateText, { color: textColor }]}>
+              {formatDate(time)}
+            </Text>
+          ) : null}
+        </View>
         <View style={styles.toolbar}>
           <TouchableOpacity
             onPress={handleOrientationButtonPress}
             style={[
-              styles.iconButton,
+              styles.textButton,
               {
                 backgroundColor: buttonBackground,
                 borderColor: buttonBorder,
               },
             ]}
             activeOpacity={0.7}>
-            <Text style={[styles.iconButtonText, { color: textColor }]}>⟳</Text>
+            <Text style={[styles.buttonText, { color: textColor }]}>
+              {orientationMode === 'landscape' ? '竖屏' : '横屏'}
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={event => {
@@ -131,24 +173,35 @@ const App = () => {
               setShowDateInfo(prev => !prev);
             }}
             style={[
-              styles.iconButton,
+              styles.textButton,
               {
                 backgroundColor: buttonBackground,
                 borderColor: buttonBorder,
               },
             ]}
             activeOpacity={0.7}>
-            <Text style={[styles.iconButtonText, { color: textColor }]}>
-              {showDateInfo ? '📅' : '🙈'}
+            <Text style={[styles.buttonText, { color: textColor }]}>
+              {showDateInfo ? '隐藏日期' : '显示日期'}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={event => {
+              event.stopPropagation();
+              toggleLockOrientation();
+            }}
+            style={[
+              styles.textButton,
+              {
+                backgroundColor: buttonBackground,
+                borderColor: buttonBorder,
+              },
+            ]}
+            activeOpacity={0.7}>
+            <Text style={[styles.buttonText, { color: textColor }]}>
+              {isOrientationLocked ? '解锁' : '锁定'}
             </Text>
           </TouchableOpacity>
         </View>
-        {renderTime()}
-        {showDateInfo ? (
-          <Text style={[styles.dateText, { color: textColor }]}>
-            {formatDate(time)}
-          </Text>
-        ) : null}
       </View>
     </TouchableWithoutFeedback>
   );
@@ -157,9 +210,17 @@ const App = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 24,
+  },
+  contentContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 120, // 为底部按钮留出空间
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   horizontalTimeText: {
     fontSize: 120,
@@ -196,21 +257,24 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 18,
   },
-  iconButton: {
-    width: 60,
-    height: 60,
+  textButton: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
     borderWidth: 1,
-    borderRadius: 999,
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000000',
-    shadowOpacity: 0.2,
-    shadowOffset: { width: 0, height: 8 },
-    shadowRadius: 12,
-    elevation: 8,
+    shadowOpacity: 0.15,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 8,
+    elevation: 6,
+    minWidth: 100,
   },
-  iconButtonText: {
-    fontSize: 26,
+  buttonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    fontFamily: Platform.OS === 'android' ? 'sans-serif-medium' : 'System',
   },
 });
 

@@ -85,6 +85,23 @@ npm run android
 - 默认使用深色主题（黑色背景，白色文字）
 - 点击屏幕可以切换深色/浅色主题
 
+### 5.离线安装
+生成 JS bundle 和资源
+```bash
+   npx react-native bundle ^
+     --platform android ^
+     --dev false ^
+     --entry-file index.js ^
+     --bundle-output android/app/src/main/assets/index.android.bundle ^
+     --assets-dest android/app/src/main/res
+```
+重新安装 Debug APK
+```bash
+   cd android
+   gradlew installDebug
+   cd ..
+```
+
 ## 常见问题
 
 ### 问题: "SDK location not found"
