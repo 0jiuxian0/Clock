@@ -15,6 +15,14 @@ A full-screen real-time clock Android application developed with React Native.
 - 🔄 **Orientation Control** - Lock/unlock screen orientation, switch between landscape and portrait
 - 🌐 **Multi-language** - Supports Chinese and English
 
+## Screenshots
+
+### Portrait Mode
+![Portrait Mode](img/protrait.jpg)
+
+### Landscape Mode
+![Landscape Mode](img/landspace.jpg)
+
 ## Tech Stack
 
 - React Native 0.72.6
