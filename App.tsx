@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 
 type OrientationMode = 'landscape' | 'portrait';
+type Language = 'zh' | 'en';
 
 type OrientationNativeModule = {
   rotateToLandscape: () => void;
@@ -27,12 +28,41 @@ type OrientationNativeModule = {
 const OrientationModule = NativeModules
   .OrientationModule as OrientationNativeModule | undefined;
 
+// 语言文本映射
+const translations = {
+  zh: {
+    weekdays: ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'],
+    dateFormat: (year: number, month: string, day: string, weekday: string) =>
+      `${year}年${month}月${day}日 ${weekday}`,
+    portrait: '竖屏',
+    landscape: '横屏',
+    showDate: '显示日期',
+    hideDate: '隐藏日期',
+    lock: '锁定',
+    unlock: '解锁',
+    switchLanguage: '切换语言',
+  },
+  en: {
+    weekdays: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+    dateFormat: (year: number, month: string, day: string, weekday: string) =>
+      `${weekday}, ${month}/${day}/${year}`,
+    portrait: 'Portrait',
+    landscape: 'Landscape',
+    showDate: 'Show Date',
+    hideDate: 'Hide Date',
+    lock: 'Lock',
+    unlock: 'Unlock',
+    switchLanguage: 'Switch Language',
+  },
+};
+
 const App = () => {
   const [time, setTime] = useState(new Date());
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [orientationMode, setOrientationMode] = useState<OrientationMode>('landscape');
   const [showDateInfo, setShowDateInfo] = useState(false);
   const [isOrientationLocked, setIsOrientationLocked] = useState(false);
+  const [language, setLanguage] = useState<Language>('zh');
   const { width, height } = useWindowDimensions();
   const isPortraitLayout = height >= width;
 
@@ -73,12 +103,12 @@ const App = () => {
 
   // 格式化日期
   const formatDate = (date: Date): string => {
-    const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+    const t = translations[language];
     const year = date.getFullYear();
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     const day = date.getDate().toString().padStart(2, '0');
-    const weekday = weekdays[date.getDay()];
-    return `${year}年${month}月${day}日 ${weekday}`;
+    const weekday = t.weekdays[date.getDay()];
+    return t.dateFormat(year, month, day, weekday);
   };
 
   const backgroundColor = isDarkMode ? '#000000' : '#FFFFFF';
@@ -144,7 +174,7 @@ const App = () => {
     <TouchableWithoutFeedback onPress={toggleTheme}>
       <View style={[styles.container, { backgroundColor }]}>
         <StatusBar hidden={true} />
-        <View style={styles.contentContainer}>
+        <View style={[styles.contentContainer, isPortraitLayout && styles.contentContainerPortrait]}>
           {renderTime()}
           {showDateInfo ? (
             <Text style={[styles.dateText, { color: textColor }]}>
@@ -152,19 +182,20 @@ const App = () => {
             </Text>
           ) : null}
         </View>
-        <View style={styles.toolbar}>
+        <View style={[styles.toolbar, isPortraitLayout && styles.toolbarPortrait]}>
           <TouchableOpacity
             onPress={handleOrientationButtonPress}
             style={[
               styles.textButton,
+              isPortraitLayout && styles.textButtonPortrait,
               {
                 backgroundColor: buttonBackground,
                 borderColor: buttonBorder,
               },
             ]}
             activeOpacity={0.7}>
-            <Text style={[styles.buttonText, { color: textColor }]}>
-              {orientationMode === 'landscape' ? '竖屏' : '横屏'}
+            <Text style={[styles.buttonText, isPortraitLayout && styles.buttonTextPortrait, { color: textColor }]}>
+              {orientationMode === 'landscape' ? translations[language].portrait : translations[language].landscape}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -174,14 +205,15 @@ const App = () => {
             }}
             style={[
               styles.textButton,
+              isPortraitLayout && styles.textButtonPortrait,
               {
                 backgroundColor: buttonBackground,
                 borderColor: buttonBorder,
               },
             ]}
             activeOpacity={0.7}>
-            <Text style={[styles.buttonText, { color: textColor }]}>
-              {showDateInfo ? '隐藏日期' : '显示日期'}
+            <Text style={[styles.buttonText, isPortraitLayout && styles.buttonTextPortrait, { color: textColor }]}>
+              {showDateInfo ? translations[language].hideDate : translations[language].showDate}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -191,14 +223,33 @@ const App = () => {
             }}
             style={[
               styles.textButton,
+              isPortraitLayout && styles.textButtonPortrait,
               {
                 backgroundColor: buttonBackground,
                 borderColor: buttonBorder,
               },
             ]}
             activeOpacity={0.7}>
-            <Text style={[styles.buttonText, { color: textColor }]}>
-              {isOrientationLocked ? '解锁' : '锁定'}
+            <Text style={[styles.buttonText, isPortraitLayout && styles.buttonTextPortrait, { color: textColor }]}>
+              {isOrientationLocked ? translations[language].unlock : translations[language].lock}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={event => {
+              event.stopPropagation();
+              setLanguage(prev => prev === 'zh' ? 'en' : 'zh');
+            }}
+            style={[
+              styles.textButton,
+              isPortraitLayout && styles.textButtonPortrait,
+              {
+                backgroundColor: buttonBackground,
+                borderColor: buttonBorder,
+              },
+            ]}
+            activeOpacity={0.7}>
+            <Text style={[styles.buttonText, isPortraitLayout && styles.buttonTextPortrait, { color: textColor }]}>
+              {translations[language].switchLanguage}
             </Text>
           </TouchableOpacity>
         </View>
@@ -221,6 +272,9 @@ const styles = StyleSheet.create({
     bottom: 120, // 为底部按钮留出空间
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  contentContainerPortrait: {
+    bottom: 150, // 竖屏模式下为两行按钮留出更多空间
   },
   horizontalTimeText: {
     fontSize: 120,
@@ -256,6 +310,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 18,
+    flexWrap: 'nowrap',
+  },
+  toolbarPortrait: {
+    flexWrap: 'wrap',
+    gap: 12,
+    paddingHorizontal: 12,
+    bottom: 30,
   },
   textButton: {
     paddingHorizontal: 24,
@@ -271,10 +332,20 @@ const styles = StyleSheet.create({
     elevation: 6,
     minWidth: 100,
   },
+  textButtonPortrait: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    minWidth: 80,
+    flex: 1,
+    maxWidth: '48%',
+  },
   buttonText: {
     fontSize: 16,
     fontWeight: '600',
     fontFamily: Platform.OS === 'android' ? 'sans-serif-medium' : 'System',
+  },
+  buttonTextPortrait: {
+    fontSize: 14,
   },
 });
 
