@@ -1,5 +1,7 @@
 # Clock - 全屏时钟应用
 
+[English](README_EN.md) | [中文](README.md)
+
 一个使用 React Native 开发的全屏实时时钟 Android 应用。
 
 ## 功能特点
@@ -113,12 +115,34 @@ Clock/
 
 ### 生成 APK
 
+清理并构建 Release 版本：
+
+**Windows:**
 ```bash
 cd android
+gradlew clean
+gradlew assembleRelease
+```
+
+**Mac/Linux:**
+```bash
+cd android
+./gradlew clean
 ./gradlew assembleRelease
 ```
 
-APK 文件会在 `android/app/build/outputs/apk/release/app-release.apk`
+生成的 APK 文件在：`android/app/build/outputs/apk/release/app-release.apk`
+
+### 安装 Release 版本
+
+构建完成后，可以使用以下命令安装到连接的设备：
+
+```bash
+cd ..
+adb install -r android/app/build/outputs/apk/release/app-release.apk
+```
+
+`-r` 参数表示如果应用已安装则替换安装。
 
 ### 生成签名 APK
 
@@ -130,8 +154,18 @@ keytool -genkeypair -v -storetype PKCS12 -keystore my-release-key.keystore -alia
 2. 配置签名：编辑 `android/app/build.gradle`，添加签名配置
 
 3. 构建签名 APK：
+
+**Windows:**
 ```bash
 cd android
+gradlew clean
+gradlew assembleRelease
+```
+
+**Mac/Linux:**
+```bash
+cd android
+./gradlew clean
 ./gradlew assembleRelease
 ```
 
