@@ -184,6 +184,26 @@ const App = () => {
         </View>
         <View style={[styles.toolbar, isPortraitLayout && styles.toolbarPortrait]}>
           <TouchableOpacity
+            onPress={event => {
+              event.stopPropagation();
+              toggleLockOrientation();
+            }}
+            style={[
+              styles.textButton,
+              isPortraitLayout && styles.textButtonPortrait,
+              {
+                backgroundColor: buttonBackground,
+                borderColor: buttonBorder,
+              },
+            ]}
+            activeOpacity={0.7}>
+            <Text 
+              numberOfLines={1}
+              style={[styles.buttonText, isPortraitLayout && styles.buttonTextPortrait, { color: textColor }]}>
+              {isOrientationLocked ? translations[language].unlock : translations[language].lock}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
             onPress={handleOrientationButtonPress}
             style={[
               styles.textButton,
@@ -194,7 +214,9 @@ const App = () => {
               },
             ]}
             activeOpacity={0.7}>
-            <Text style={[styles.buttonText, isPortraitLayout && styles.buttonTextPortrait, { color: textColor }]}>
+            <Text 
+              numberOfLines={1}
+              style={[styles.buttonText, isPortraitLayout && styles.buttonTextPortrait, { color: textColor }]}>
               {orientationMode === 'landscape' ? translations[language].portrait : translations[language].landscape}
             </Text>
           </TouchableOpacity>
@@ -212,26 +234,10 @@ const App = () => {
               },
             ]}
             activeOpacity={0.7}>
-            <Text style={[styles.buttonText, isPortraitLayout && styles.buttonTextPortrait, { color: textColor }]}>
+            <Text 
+              numberOfLines={1}
+              style={[styles.buttonText, isPortraitLayout && styles.buttonTextPortrait, { color: textColor }]}>
               {showDateInfo ? translations[language].hideDate : translations[language].showDate}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={event => {
-              event.stopPropagation();
-              toggleLockOrientation();
-            }}
-            style={[
-              styles.textButton,
-              isPortraitLayout && styles.textButtonPortrait,
-              {
-                backgroundColor: buttonBackground,
-                borderColor: buttonBorder,
-              },
-            ]}
-            activeOpacity={0.7}>
-            <Text style={[styles.buttonText, isPortraitLayout && styles.buttonTextPortrait, { color: textColor }]}>
-              {isOrientationLocked ? translations[language].unlock : translations[language].lock}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -248,7 +254,9 @@ const App = () => {
               },
             ]}
             activeOpacity={0.7}>
-            <Text style={[styles.buttonText, isPortraitLayout && styles.buttonTextPortrait, { color: textColor }]}>
+            <Text 
+              numberOfLines={1}
+              style={[styles.buttonText, isPortraitLayout && styles.buttonTextPortrait, { color: textColor }]}>
               {translations[language].switchLanguage}
             </Text>
           </TouchableOpacity>
@@ -314,9 +322,10 @@ const styles = StyleSheet.create({
   },
   toolbarPortrait: {
     flexWrap: 'wrap',
-    gap: 12,
+    gap: 10,
     paddingHorizontal: 12,
     bottom: 30,
+    justifyContent: 'space-between',
   },
   textButton: {
     paddingHorizontal: 24,
@@ -333,11 +342,10 @@ const styles = StyleSheet.create({
     minWidth: 100,
   },
   textButtonPortrait: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 8,
     paddingVertical: 10,
-    minWidth: 80,
-    flex: 1,
-    maxWidth: '48%',
+    width: '47%',
+    minWidth: 0,
   },
   buttonText: {
     fontSize: 16,
@@ -345,7 +353,7 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === 'android' ? 'sans-serif-medium' : 'System',
   },
   buttonTextPortrait: {
-    fontSize: 14,
+    fontSize: 13,
   },
 });
 
